@@ -37,6 +37,9 @@ const RPC_TRN_MAX_NET_SWITCHES = 256;
 /* Upper limit on maximum numbber of transit routers in a vpc */
 const RPC_TRN_MAX_VPC_ROUTERS = 256;
 
+/* Upper limit on maximum numbber of frontend ports for an endpoint */
+const RPC_TRN_MAX_EP_PORTS = 256;
+
 /* Defines generic codes, 0 is always a success need not to mention! */
 const RPC_TRN_WARN = 1;
 const RPC_TRN_ERROR = 2;
@@ -87,6 +90,11 @@ struct rpc_trn_port_t {
        uint16_t port;
        uint16_t target_port;
        uint8_t protocol;
+};
+
+/* Defines an array of ports */
+struct rpc_trn_ports_t {
+       rpc_trn_port_t ports<RPC_TRN_MAX_EP_PORTS>;
 };
 
 /* Defines a unique key to get/delete an RP (in DP) */
@@ -167,7 +175,7 @@ program RPC_TRANSIT_REMOTE_PROTOCOL {
                 int UPDATE_VPC(rpc_trn_vpc_t) = 1;
                 int UPDATE_NET(rpc_trn_network_t) = 2;
                 int UPDATE_EP(rpc_trn_endpoint_t) = 3;
-                int UPDATE_PORT(rpc_trn_port_t) = 4;
+                int UPDATE_PORTS(rpc_trn_ports_t) = 4;
                 int UPDATE_AGENT_EP(rpc_trn_endpoint_t) = 5;
                 int UPDATE_AGENT_MD(rpc_trn_agent_metadata_t) = 6;
 

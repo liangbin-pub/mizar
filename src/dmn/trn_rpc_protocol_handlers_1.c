@@ -281,42 +281,50 @@ error:
 	return &result;
 }
 
-int *update_port_1_svc(rpc_trn_port_t *port, struct svc_req *rqstp)
+int *update_ports_1_svc(rpc_trn_ports_t *ports, struct svc_req *rqstp)
 {
 	UNUSED(rqstp);
 	static int result;
 	result = 0;
-	int rc;
-	char *itf = port->interface;
+	int rc, i;
 	struct port_key_t portkey;
 	struct port_t portval;
+	int count = ports->ports.ports_len;
+	rpc_trn_port_t *port = ports->ports.ports_val;
+	char *itf;
+	struct user_metadata_t *md;
 
-	TRN_LOG_DEBUG(
-		"update_port_1 Port tunid: %ld IP: 0x%x, with %u port for target_port: %u and protocol: %u",
-		port->tunid, port->ip, port->port, port->target_port,
-		port->protocol);
 
-	struct user_metadata_t *md = trn_itf_table_find(itf);
+	for (i = 0; i < count; i++) {
 
-	if (!md) {
-		TRN_LOG_ERROR("Cannot find interface metadata for %s", itf);
-		result = RPC_TRN_ERROR;
-		goto error;
-	}
+		TRN_LOG_DEBUG(
+			"update_ports_1 %u/%u Port tunid: %ld IP: 0x%x, with %u port for target_port: %u and protocol: %u",
+			i + 1, count, port->tunid, port->ip, port->port, port->target_port,
+			port->protocol);
 
-	memcpy(portkey.tunip, &port->tunid, sizeof(port->tunid));
-	portkey.tunip[2] = port->ip;
-	portkey.port = port->port;
-	portkey.protocol = port->protocol;
+		itf = port->interface;
+		md = trn_itf_table_find(itf);
 
-	portval.target_port = port->target_port;
-	rc = trn_update_port(md, &portkey, &portval);
+		if (!md) {
+			TRN_LOG_ERROR("Cannot find interface metadata for %s", itf);
+			result = RPC_TRN_ERROR;
+			goto error;
+		}
 
-	if (rc != 0) {
-		TRN_LOG_ERROR("Failure updating port %ld data on interface: %s",
-			      port->tunid, port->interface);
-		result = RPC_TRN_FATAL;
-		goto error;
+		memcpy(portkey.tunip, &port->tunid, sizeof(port->tunid));
+		portkey.tunip[2] = port->ip;
+		portkey.port = port->port;
+		portkey.protocol = port->protocol;
+
+		portval.target_port = port->target_port;
+		rc = trn_update_port(md, &portkey, &portval);
+
+		if (rc != 0) {
+			TRN_LOG_ERROR("Failure updating port %ld data on interface: %s",
+					port->tunid, port->interface);
+			result = RPC_TRN_FATAL;
+			goto error;
+		}
 	}
 
 	return &result;

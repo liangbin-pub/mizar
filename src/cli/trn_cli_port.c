@@ -24,7 +24,7 @@
  */
 #include "trn_cli.h"
 
-int trn_cli_update_port_subcmd(CLIENT *clnt, int argc, char *argv[])
+int trn_cli_update_ports_subcmd(CLIENT *clnt, int argc, char *argv[])
 {
 	ketopt_t om = KETOPT_INIT;
 	struct cli_conf_data_t conf;
@@ -42,12 +42,14 @@ int trn_cli_update_port_subcmd(CLIENT *clnt, int argc, char *argv[])
 	}
 
 	int *rc;
-	rpc_trn_port_t port;
-	char rpc[] = "update_port_1";
+	rpc_trn_ports_t ports;
+	char rpc[] = "update_ports_1";
 
-	port.interface = conf.intf;
+	rpc_trn_port_t ep_ports[RPC_TRN_MAX_EP_PORTS];
+	ports.ports.ports_val = ep_ports;
+	ports.ports.ports_len = 0;
 
-	int err = trn_cli_parse_port(json_str, &port);
+	int err = trn_cli_parse_ports(json_str, &ports);
 	cJSON_Delete(json_str);
 
 	if (err != 0) {
@@ -55,9 +57,15 @@ int trn_cli_update_port_subcmd(CLIENT *clnt, int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	rc = update_port_1(&port, clnt);
+	int i;
+	int count = ports.ports.ports_len;
+	for ( i = 0; i < count; i++ ) {
+		ep_ports[i].interface = conf.intf;
+	}
+
+	rc = update_ports_1(&ports, clnt);
 	if (rc == (int *)NULL) {
-		print_err("RPC Error: client call failed: update_port_1.\n");
+		print_err("RPC Error: client call failed: update_ports_1.\n");
 		return -EINVAL;
 	}
 
@@ -68,10 +76,11 @@ int trn_cli_update_port_subcmd(CLIENT *clnt, int argc, char *argv[])
 		return -EINVAL;
 	}
 
-	dump_port(&port);
+	for ( i = 0; i < count; i++ ) {
+		dump_port(&ep_ports[i]);
+	}
 	print_msg(
-		"update_port_1 successfully updated port %u with protocol %u.\n",
-		ntohs(port.target_port), port.protocol);
+		"update_ports_1 successfully updated %u ports.\n", count);
 	return 0;
 }
 

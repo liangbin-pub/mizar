@@ -45,7 +45,7 @@ class TrnRpc:
         self.trn_cli_update_ep = f'''{self.trn_cli} update-ep -i {self.phy_itf} -j'''
         self.trn_cli_get_ep = f'''{self.trn_cli} get-ep -i {self.phy_itf} -j'''
         self.trn_cli_delete_ep = f'''{self.trn_cli} delete-ep -i {self.phy_itf} -j'''
-        self.trn_cli_update_port = f'''{self.trn_cli} update-port -i {self.phy_itf} -j'''
+        self.trn_cli_update_ports = f'''{self.trn_cli} update-ports -i {self.phy_itf} -j'''
         self.trn_cli_load_pipeline_stage = f'''{self.trn_cli} load-pipeline-stage -i {self.phy_itf} -j'''
         self.trn_cli_unload_pipeline_stage = f'''{self.trn_cli} unload-pipeline-stage -i {self.phy_itf} -j'''
 
@@ -131,21 +131,28 @@ class TrnRpc:
         remote_ports = ep.get_remote_ports()
         frontend_ports = ep.get_frontend_ports()
         protocols = ep.get_port_protocols()
-        for i in range(len(remote_ports)):
-            self.update_port(ep.get_tunnel_id(), ep.get_ip(),
-                             frontend_ports[i], remote_ports[i], protocols[i])
+        self.update_ports(ep.get_tunnel_id(), ep.get_ip(),
+                             frontend_ports, remote_ports, protocols)
 
-    def update_port(self, tunid, ip, port, target_port, protocol):
+    def update_ports(self, tunid, ip, fports, rports, protocols):
+        ep_ports = []
+    
+        for i in range(len(rports)):
+            pinfo = {
+                "tunnel_id": tunid,
+                "ip": ip,
+                "port": fports[i],
+                "target_port": rports[i],
+                "protocol": protocols[i],
+            }
+            ep_ports.append(pinfo)
+
         jsonconf = {
-            "tunnel_id": tunid,
-            "ip": ip,
-            "port": port,
-            "target_port": target_port,
-            "protocol": protocol,
+            "ep_ports": ep_ports,
         }
         jsonconf = json.dumps(jsonconf)
-        cmd = f'''{self.trn_cli_update_port} \'{jsonconf}\''''
-        logger.info("update_port: {}".format(cmd))
+        cmd = f'''{self.trn_cli_update_ports} \'{jsonconf}\''''
+        logger.info("update_ports: {}".format(cmd))
         returncode, text = run_cmd(cmd)
         logger.info("returns {} {}".format(returncode, text))
 

@@ -33,7 +33,7 @@ static const struct cmd {
 	{ "update-vpc", trn_cli_update_vpc_subcmd },
 	{ "update-net", trn_cli_update_net_subcmd },
 	{ "update-ep", trn_cli_update_ep_subcmd },
-	{ "update-port", trn_cli_update_port_subcmd },
+	{ "update-ports", trn_cli_update_ports_subcmd },
 	{ "update-agent-ep", trn_cli_update_agent_ep_subcmd },
 	{ "update-agent-metadata", trn_cli_update_agent_md_subcmd },
 	{ "load-transit-xdp", trn_cli_load_transit_subcmd },
@@ -80,13 +80,13 @@ int main(int argc, char *argv[])
 		if (o == 's') {
 			server = malloc(sizeof(char) * strlen(om.arg) + 1);
 			strcpy(server, om.arg);
-			printf("main -s %s\n", server);
+			printf("transit -s %s\n", server);
 			malloc_server = 1;
 		}
 		if (o == 'p') {
 			protocol = malloc(sizeof(char) * strlen(om.arg) + 1);
 			strcpy(protocol, om.arg);
-			printf("main -s %s\n", server);
+			printf("transit -s %s\n", server);
 			malloc_protocol = 1;
 		}
 	}

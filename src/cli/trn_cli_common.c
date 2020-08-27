@@ -308,6 +308,37 @@ int trn_cli_parse_port(const cJSON *jsonobj, struct rpc_trn_port_t *port)
 	return 0;
 }
 
+int trn_cli_parse_ports(const cJSON *jsonobj, struct rpc_trn_ports_t *ports)
+{
+	struct rpc_trn_port_t *port = ports->ports.ports_val;
+	int count = 0;
+	int rc;
+	cJSON *ep_ports = cJSON_GetObjectItem(jsonobj, "ep_ports");
+	cJSON *ep_port = NULL;
+
+	if (ep_ports == NULL || !cJSON_IsArray(ep_ports)) {
+		print_err("Error: ep_ports array required\n");
+		return -EINVAL;
+	}
+
+	cJSON_ArrayForEach(ep_port, ep_ports)
+	{
+		rc = trn_cli_parse_port(ep_port, port);
+		if ( rc != 0 ) {
+			return rc;
+		}
+		count++;
+		if (count == RPC_TRN_MAX_EP_PORTS) {
+			print_err("Warning: Ports per End point reached max limit\n");
+			break;
+		}
+		port++;
+	}
+	ports->ports.ports_len = count;
+
+	return 0;
+}
+
 int trn_cli_parse_ep(const cJSON *jsonobj, struct rpc_trn_endpoint_t *ep)
 {
 	cJSON *tunnel_id = cJSON_GetObjectItem(jsonobj, "tunnel_id");
